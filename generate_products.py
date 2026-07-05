@@ -79,6 +79,10 @@ for category, (num_styles, min_cost, max_cost) in categories.items():
 
         base_cost = round(np.random.uniform(min_cost, max_cost), 2)
 
+        # Fashion color cost is about $3 higher than base cost
+
+        fashion_cost = round(base_cost + np.random.uniform(2.5, 3.5), 2)
+
         num_colors = np.random.choice(variant_counts, p=variant_weights)
         colors_for_style = build_color_list(num_colors)
 
@@ -87,8 +91,7 @@ for category, (num_styles, min_cost, max_cost) in categories.items():
             if color in basic_colors:
                 cost = base_cost
             else:
-                surcharge = round(np.random.uniform(3, 8), 2)
-                cost = round(base_cost + surcharge, 2)
+                cost = fashion_cost
 
             products.append([sku, style_name, category, color, cost])
             sku_counter += 1
