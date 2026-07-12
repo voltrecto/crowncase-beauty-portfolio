@@ -1,13 +1,10 @@
 import os
 import pandas as pd
 import numpy as np
-from faker import Faker
 import random
 
 np.random.seed(42)
 random.seed(42)
-fake = Faker()
-Faker.seed(42)
 
 # Basic colors, guaranteed baseline, no cost premium
 basic_colors = ['1', '1B', '2', '613']
