@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import random
+import math
 
 np.random.seed(42)
 random.seed(42)
@@ -32,6 +33,7 @@ seasonality_curves = {
 
 sku_to_category = dict(zip(products_df["sku"], products_df["category"]))
 
+# generated date range in 2024 - 2025
 all_dates = pd.date_range(start="2024-01-01", end="2025-12-31", freq="D")
 
 def build_day_weights(dates, curve):
@@ -43,6 +45,28 @@ day_weights_by_group = {
     for group, curve in seasonality_curves.items()
 }
 
+# setting prices to nearest 0.99
+def round_to_99(price):
+    return math.floor(price) + 0.99
+
+cost_min = products_df["cost_of_goods"].min()
+cost_max = products_df["cost_of_goods"].max()
+
+sku_to_website_price = {}
+sku_to_fbm_price = {}
+
+# website price is nearest 0.99 of about 30% gross profit margin. fbm price is higher based on cost
+for sku, cost in zip(products_df["sku"], products_df["cost_of_goods"]):
+    website_price = round_to_99(cost * 1.43)
+    fbm_premium = 1 + (cost - cost_min) / (cost_max - cost_min) * (5 - 1)
+    fbm_price = round_to_99(website_price + fbm_premium)
+    sku_to_website_price[sku] = website_price
+    sku_to_fbm_price[sku] = fbm_price
+
+# lookup dictionaries for fee and shipping from channels.csv
+channels_df = pd.read_csv("data/channels.csv")
+channel_to_fee_pct = dict(zip(channels_df["channel"], channels_df["avg_fee_pct"]))
+channel_to_shipping = dict(zip(channels_df["channel"], channels_df["avg_shipping_cost"]))
 
 orders = []
 for i in range(NUM_ORDERS):
@@ -53,10 +77,14 @@ for i in range(NUM_ORDERS):
     order_date = np.random.choice(all_dates, p=day_weights_by_group[seasonal_group])
     channel = random.choice(channels)
     units_sold = np.random.randint(1, 4)
+    unit_price = sku_to_website_price[sku] if channel == "Website" else sku_to_fbm_price[sku]
+    discount_amount = round(unit_price * 0.10, 2) if np.random.random() < 0.10 else 0.0
+    shipping_cost = channel_to_shipping[channel]
+    platform_fee = round(unit_price * units_sold * channel_to_fee_pct[channel], 2)
 
-    orders.append([order_id, order_date, sku, channel, units_sold])
+    orders.append([order_id, order_date, sku, channel, units_sold, unit_price, discount_amount, shipping_cost, platform_fee])
 
-orders_df = pd.DataFrame(orders, columns=["order_id", "order_date", "sku", "channel", "units_sold"])
+orders_df = pd.DataFrame(orders, columns=["order_id", "order_date", "sku", "channel", "units_sold", "unit_price", "discount_amount", "shipping_cost", "platform_fee"])
 
 print(orders_df.shape)
 print(orders_df["sku"].value_counts().head(10))
