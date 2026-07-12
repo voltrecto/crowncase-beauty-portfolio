@@ -81,10 +81,11 @@ for i in range(NUM_ORDERS):
     discount_amount = round(unit_price * 0.10, 2) if np.random.random() < 0.10 else 0.0
     shipping_cost = channel_to_shipping[channel]
     platform_fee = round(unit_price * units_sold * channel_to_fee_pct[channel], 2)
+    return_flag = np.random.random() < 0.08
 
-    orders.append([order_id, order_date, sku, channel, units_sold, unit_price, discount_amount, shipping_cost, platform_fee])
+    orders.append([order_id, order_date, sku, channel, units_sold, unit_price, discount_amount, shipping_cost, platform_fee, return_flag])
 
-orders_df = pd.DataFrame(orders, columns=["order_id", "order_date", "sku", "channel", "units_sold", "unit_price", "discount_amount", "shipping_cost", "platform_fee"])
+orders_df = pd.DataFrame(orders, columns=["order_id", "order_date", "sku", "channel", "units_sold", "unit_price", "discount_amount", "shipping_cost", "platform_fee", "return_flag"])
 
 print(orders_df.shape)
 print(orders_df["sku"].value_counts().head(10))
