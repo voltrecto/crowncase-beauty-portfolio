@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import random
 import math
+import os
 
 np.random.seed(42)
 random.seed(42)
@@ -87,6 +88,41 @@ for i in range(NUM_ORDERS):
 
 orders_df = pd.DataFrame(orders, columns=["order_id", "order_date", "sku", "channel", "units_sold", "unit_price", "discount_amount", "shipping_cost", "platform_fee", "return_flag"])
 
+# randomply pick 5% orders and replace their discount amount or shipping cost with nan
+null_discount_idx = np.random.choice(orders_df.index, size=int(len(orders_df) * 0.05), replace=False)
+orders_df.loc[null_discount_idx, "discount_amount"] = np.nan
+
+null_shipping_idx = np.random.choice(orders_df.index, size=int(len(orders_df) * 0.05), replace=False)
+orders_df.loc[null_shipping_idx, "shipping_cost"] = np.nan
+
+# randomly pick 5% orders and replace channel with incorrect casings
+channel_variants = {
+    "Website": ["website", "WEBSITE", "WebSite"],
+    "Amazon FBM": ["amazon fbm", "AMAZON FBM", "Amazon fbm"]
+}
+
+messy_channel_idx = np.random.choice(orders_df.index, size=int(len(orders_df) * 0.05), replace=False)
+for idx in messy_channel_idx:
+    original = orders_df.loc[idx, "channel"]
+    orders_df.loc[idx, "channel"] = random.choice(channel_variants[original])
+
+# randomly pick 2% orders and replace their dates with incorrect format
+orders_df["order_date"] = orders_df["order_date"].dt.strftime("%Y-%m-%d")
+
+messy_date_idx = np.random.choice(orders_df.index, size=int(len(orders_df) * 0.02), replace=False)
+for idx in messy_date_idx:
+    date_obj = pd.to_datetime(orders_df.loc[idx, "order_date"])
+    orders_df.loc[idx, "order_date"] = date_obj.strftime("%m/%d/%Y")
+
+# randomly pick 15 rows to duplicate
+dup_rows = orders_df.sample(n=15)
+orders_df = pd.concat([orders_df, dup_rows], ignore_index=True)
+
 print(orders_df.shape)
-print(orders_df["sku"].value_counts().head(10))
-print(orders_df["sku"].value_counts().tail(10))
+print(orders_df.isnull().sum())
+print(orders_df["channel"].value_counts())
+print(orders_df["order_date"].head(20).tolist())
+
+os.makedirs("data", exist_ok=True)
+orders_df.to_csv("data/orders.csv", index=False)
+print("Saved to data/orders.csv")
