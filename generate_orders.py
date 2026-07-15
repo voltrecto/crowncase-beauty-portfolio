@@ -13,6 +13,11 @@ num_skus = len(skus)
 
 # Random popularity weighting
 raw_popularity = np.random.exponential(scale=1.0, size=num_skus)
+
+# 1B variants tend to be more popular than other colors
+is_1b = (products_df["color"] == "1B").values
+raw_popularity[is_1b] *= 1.5
+
 sku_weights = raw_popularity / raw_popularity.sum()
 
 channels = ["Website", "Amazon FBM"]
