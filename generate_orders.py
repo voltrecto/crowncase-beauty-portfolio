@@ -81,7 +81,7 @@ for i in range(NUM_ORDERS):
     category = sku_to_category[sku]
     seasonal_group = category_seasonal_group[category]
     order_date = np.random.choice(all_dates, p=day_weights_by_group[seasonal_group])
-    channel = random.choice(channels)
+    channel = random.choices(channels, weights=[2, 1])[0]
     units_sold = np.random.randint(1, 4)
     unit_price = sku_to_website_price[sku] if channel == "Website" else sku_to_fbm_price[sku]
     discount_amount = round(unit_price * 0.10, 2) if np.random.random() < 0.10 else 0.0
