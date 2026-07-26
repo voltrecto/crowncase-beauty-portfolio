@@ -13,7 +13,7 @@ FROM orders_clean
 GROUP BY channel, YEAR(order_date), MONTH(order_date)
 ORDER BY channel, order_year, order_month;
 
--- 2. gross margin by category
+-- 2. gross margin by category (excludes platform fee)
 SELECT
     p.category,
     SUM(oc.unit_price * oc.units_sold) AS revenue,
