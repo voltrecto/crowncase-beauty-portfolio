@@ -1,4 +1,4 @@
--- 8 business queries against orders_clean
+-- 10 business queries against orders_clean
 
 USE CrownCaseBeauty_Portfolio;
 GO
@@ -112,3 +112,26 @@ SELECT
 FROM orders_clean
 GROUP BY channel
 ORDER BY channel;
+
+-- 9. discount impact on margin (net of discount, unlike query 4/query 2)
+SELECT
+    CASE WHEN oc.discount_amount > 0 THEN 'Discounted' ELSE 'Not Discounted' END AS discount_status,
+    COUNT(*) AS order_count,
+    SUM(oc.unit_price * oc.units_sold) AS gross_revenue,
+    ROUND(
+        SUM(oc.unit_price * oc.units_sold - oc.discount_amount - p.cost_of_goods * oc.units_sold - oc.platform_fee)
+        / SUM(oc.unit_price * oc.units_sold) * 100
+    , 2) AS margin_pct
+FROM orders_clean oc
+JOIN products p ON oc.sku = p.sku
+GROUP BY CASE WHEN oc.discount_amount > 0 THEN 'Discounted' ELSE 'Not Discounted' END;
+
+-- 10. average order value by category
+SELECT
+    p.category,
+    COUNT(*) AS total_orders,
+    ROUND(AVG(oc.unit_price * oc.units_sold), 2) AS avg_order_value
+FROM orders_clean oc
+JOIN products p ON oc.sku = p.sku
+GROUP BY p.category
+ORDER BY avg_order_value DESC;
