@@ -42,6 +42,8 @@ Since I wrote the generator, the broad structure in the data is structure I put 
 **Product Deep Dive**
 ![Product Deep Dive](images/product-deep-dive.png)
 
+If Power BI Desktop is not available, there's a PDF export at `powerbi/CrownCaseBeauty_Portfolio.pdf`. 
+
 ## How to Run It
 
 1. Clone the repo.
@@ -69,8 +71,15 @@ Since I wrote the generator, the broad structure in the data is structure I put 
 
 ## Key Findings
 
-- Rates sit around 8% across channels, categories and styles. A handful of styles looked like outliers but most turned out to be low-volume products where a couple of returns swing the rate several points. 
-- The website out-margins Amazon FBM on every SKU sold through both, across 150+ SKUs. FBM carries a slightly higher list price, but the 15% referral fee eats the difference. 
-- Seasonality is four curves, not one. Wigs and Lace Wigs climb into November and December. Weaves peak February through April. Braids run June through August. Both years hold the same shape. 
-- Lace Wigs' high AOV is price, not basket size. Units per order are flat across categories. Customers aren't buying more, they're paying more per unit.
-- A 10% discount costs about 4.4 margin points, not 10. The discount applies against unit price rather than total order revenue. Useful before setting promo thresholds.
+Most of these aren't discoveries so much as confirmation that the pipeline correctly recovered what I already built into the generator. 
+
+**Confirming the pipeline works:**
+
+- Return rates sit around 8% across every channel, category and style. No real pattern anywhere. Expected, since return_flag was generated as a flat coin flip independent of all of those. This confirms the measurement is accurate, not that returns actually behave this way.
+- Seasonality shows up as four separate curves, not one blended pattern. Wigs and lace wigs climb into November and December, weaves peak around February through April and braids run June through August. Both years hold the same shape. These curves were hand-designed into the generator.
+- Units per order are flat across all four categories. Lace wigs' high AOV turns out to be pure price, not basket size. Units per order were generated independent of category, so this just confirms that independence held.
+- The website out-margins Amazon FBM on every SKU sold through both channels, across 150+ SKUs, zero exceptions. Given how pricing was built (FBM's premium is small, its 15% fee isn't), this gap is close to guaranteed by construction.
+
+**What actually emerged:**
+
+- A 10% discount costs about 4.4 margin points, not 10. This is because discount amount is tied to unit price and units per order is a totally separate random variable. The 4.4 only shows up once the analysis is run.
