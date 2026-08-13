@@ -31,6 +31,17 @@ Since I wrote the generator, the broad structure in the data is structure I put 
 - **SQL Server** (T-SQL) — storage, a raw-to-clean view layer, queries behind the business questions
 - **Power BI Desktop** — 3-page report (Executive Summary, Channel Comparison, Product Deep Dive) on a star schema with DAX measures
 
+## Report Preview
+
+**Executive Summary**
+![Executive Summary](images/executive-summary.png)
+
+**Channel Comparison**
+![Channel Comparison](images/channel-comparison.png)
+
+**Product Deep Dive**
+![Product Deep Dive](images/product-deep-dive.png)
+
 ## How to Run It
 
 1. Clone the repo.
