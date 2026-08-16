@@ -23,6 +23,8 @@ I tried to make the data generated similar to the data I have encountered in rea
 
 I also introduced data quality problems (null values, inconsistent capitalization, wrong date formats, duplicate rows) to simulate the cleaning stage especially when I export data from third party channels.
 
+Shipping is in the data but stays out of every margin calculation. It's billed separately from the sale and the referral fee doesn't apply to it, so it passes straight through. Folding it into margin would count money that never affected the sale.
+
 Since I wrote the generator, the broad structure in the data is structure I put there, and I'm not presenting these results as evidence about the real wig market. What the project demonstrates is the full path from messy source data to a decision-ready report.
 
 ## Tools Used
@@ -43,6 +45,37 @@ Since I wrote the generator, the broad structure in the data is structure I put 
 ![Product Deep Dive](images/product-deep-dive.png)
 
 If Power BI Desktop is not available, there's a PDF export at `powerbi/CrownCaseBeauty_Portfolio.pdf`. 
+
+## Repo Structure
+
+```
+generate_products.py        builds the catalog, 170 SKUs across 4 categories
+generate_channels.py        website and Amazon FBM fee/shipping reference
+generate_orders.py          10,000 orders over 2 years, data quality problems injected
+
+data/
+  products.csv              generated catalog
+  channels.csv              generated channel reference
+  orders_clean.csv          cleaned export from the notebook, used in Power BI
+                            (orders.csv is not committed, the script regenerates it)
+
+sql/
+  01_create_schema.sql      database and the 3 tables
+  02_bulk_insert.sql        loads the CSVs
+  03_cleaning_view.sql      orders_clean view, cleaning logic
+  04_analytical_queries.sql 11 business queries
+
+notebooks/
+  phase3_analysis.ipynb     independent pandas clean, metrics, 6 charts, Power BI export
+
+powerbi/
+  CrownCaseBeauty_Portfolio.pbix   3-page report on a star schema
+  CrownCaseBeauty_Portfolio.pdf    PDF export, for viewing without Power BI Desktop
+
+images/                     report screenshots used in this README
+
+requirements.txt            pinned direct dependencies
+```
 
 ## How to Run It
 
@@ -71,15 +104,16 @@ If Power BI Desktop is not available, there's a PDF export at `powerbi/CrownCase
 
 ## Key Findings
 
-Most of these aren't discoveries so much as confirmation that the pipeline correctly recovered what I already built into the generator. 
+**What the analysis turned up:**
+
+- **Amazon FBM can't be priced to match the website's margin.** The gap itself follows from how I built the pricing, but the size of the price move needed to close it doesn't. At a 15% referral fee, FBM would need to charge roughly 21% more than it does today to earn what the same SKU earns on the website. A $130 wig would have to list at $166. That holds across all 161 SKUs sold on both channels. The purpose of selling in FBM is to increase the number of buyers and not to match the website's margins. It should be managed with a margin floor, not a margin target. 
+- **A 10% discount costs about 4.4 margin points, not 10.** Discounts are calculated from unit price while order size varies independently, so multi-unit orders dilute the hit. 
 
 **Confirming the pipeline works:**
+
+The rest isn't discovery so much as confirmation that the pipeline correctly recovered what I built into the generator. It doesn't say anything about the real wig market.
 
 - Return rates sit around 8% across every channel, category and style. No real pattern anywhere. Expected, since return_flag was generated as a flat coin flip independent of all of those. This confirms the measurement is accurate, not that returns actually behave this way.
 - Seasonality shows up as four separate curves, not one blended pattern. Wigs and lace wigs climb into November and December, weaves peak around February through April and braids run June through August. Both years hold the same shape. These curves were hand-designed into the generator.
 - Units per order are flat across all four categories. Lace wigs' high AOV turns out to be pure price, not basket size. Units per order were generated independent of category, so this just confirms that independence held.
-- The website out-margins Amazon FBM on every SKU sold through both channels, across 150+ SKUs, zero exceptions. Given how pricing was built (FBM's premium is small, its 15% fee isn't), this gap is close to guaranteed by construction.
-
-**What actually emerged:**
-
-- A 10% discount costs about 4.4 margin points, not 10. This is because discount amount is tied to unit price and units per order is a totally separate random variable. The 4.4 only shows up once the analysis is run.
+- The website out-margins Amazon FBM on every SKU sold through both channels, across 161 SKUs, zero exceptions. Given how pricing was built (FBM's premium is small, its 15% fee isn't), this gap is close to guaranteed by construction.
