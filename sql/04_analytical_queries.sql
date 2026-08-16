@@ -1,4 +1,4 @@
--- 10 business queries against orders_clean
+-- 11 business queries against orders_clean
 
 USE CrownCaseBeauty_Portfolio;
 GO
@@ -135,3 +135,47 @@ FROM orders_clean oc
 JOIN products p ON oc.sku = p.sku
 GROUP BY p.category
 ORDER BY avg_order_value DESC;
+
+-- 11. fbm price required to match website margin, per sku
+-- website margin = (price - cost) / price, no platform fee on that channel
+-- fbm margin at price F = ((1 - fee) * F - cost) / F
+-- setting the two equal and solving for F gives F = cost / ((1 - fee) - website_margin)
+
+-- get prices per sku from orders_clean
+WITH sku_prices AS (
+    SELECT
+        oc.sku,
+        p.cost_of_goods,
+        MAX(CASE WHEN oc.channel = 'Website' THEN oc.unit_price END) AS website_price,
+        MAX(CASE WHEN oc.channel = 'Amazon FBM' THEN oc.unit_price END) AS fbm_price
+    FROM orders_clean oc
+    JOIN products p ON oc.sku = p.sku
+    GROUP BY oc.sku, p.cost_of_goods
+),
+
+-- use formula to get required fbm price
+required_price AS (
+    SELECT
+        sp.sku,
+        sp.cost_of_goods,
+        sp.website_price,
+        sp.fbm_price,
+        (sp.website_price - sp.cost_of_goods) / sp.website_price AS website_margin,
+        sp.cost_of_goods / ((1 - c.avg_fee_pct) - (sp.website_price - sp.cost_of_goods) / sp.website_price) AS required_fbm_price
+    FROM sku_prices sp
+    CROSS JOIN channels c
+    WHERE c.channel = 'Amazon FBM'
+      AND sp.website_price IS NOT NULL
+      AND sp.fbm_price IS NOT NULL
+)
+SELECT
+    sku,
+    cost_of_goods,
+    website_price,
+    fbm_price,
+    ROUND(website_margin * 100, 2) AS website_margin_pct,
+    ROUND(required_fbm_price, 2) AS required_fbm_price,
+    ROUND((required_fbm_price / fbm_price - 1) * 100, 2) AS pct_above_current_fbm_price
+FROM required_price
+ORDER BY pct_above_current_fbm_price DESC;
+

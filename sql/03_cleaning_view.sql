@@ -24,6 +24,8 @@ SELECT
     units_sold,
     unit_price,
     COALESCE(discount_amount, 0) AS discount_amount,
+    -- shipping is filled but never used in margin
+    -- it is billed separately from the sale
     COALESCE(shipping_cost, 6.50) AS shipping_cost,
     platform_fee,
     CASE
