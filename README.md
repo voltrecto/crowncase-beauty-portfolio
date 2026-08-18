@@ -44,7 +44,7 @@ Since I wrote the generator, the broad structure in the data is structure I put 
 **Product Deep Dive**
 ![Product Deep Dive](images/product-deep-dive.png)
 
-If Power BI Desktop is not available, there's a PDF export at `powerbi/CrownCaseBeauty_Portfolio.pdf`. 
+If Power BI Desktop is not available, there's a PDF export at `powerbi/CrownCaseBeauty_Portfolio.pdf`. The data model and all 11 DAX measures are written up in `powerbi/measures.md`.
 
 ## Repo Structure
 
@@ -71,6 +71,7 @@ notebooks/
 powerbi/
   CrownCaseBeauty_Portfolio.pbix   3-page report on a star schema
   CrownCaseBeauty_Portfolio.pdf    PDF export, for viewing without Power BI Desktop
+  measures.md                      data model and all 11 DAX measures, written out
 
 images/                     report screenshots used in this README
 
